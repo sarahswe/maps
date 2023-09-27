@@ -21,7 +21,7 @@ class ContactMethod(models.Model):
     )
     phone = PhoneNumberField(null=True)
     email = models.EmailField(null=True)
-    coops = models.ManyToManyField('Coop')
+    coops = models.ManyToManyField('Coop',null=True)
     email_is_public = models.BooleanField(default=True, null=False)
     phone_is_public = models.BooleanField(default=True, null=False)
 
@@ -88,7 +88,7 @@ class CoopManager(models.Manager):
 
         addressTagsPrefetcher = Prefetch('coopaddresstags_set', queryset=CoopAddressTags.objects.select_related('address', 'address__locality', 'address__locality__state', 'address__locality__state__country'))
         queryset = Coop.objects.filter(q).prefetch_related(addressTagsPrefetcher, 'types')
-        
+
         phonePrefetcher = Prefetch('phone', queryset=ContactMethod.objects.all())
         emailPrefetcher = Prefetch('email', queryset=ContactMethod.objects.all())
         queryset = queryset.prefetch_related(phonePrefetcher).prefetch_related(emailPrefetcher)
@@ -152,7 +152,7 @@ class Coop(models.Model):
         self.web_site = proposed.get('web_site')
         for type in proposed.get('types'):
             self.types.add(CoopType.objects.get(name=type))
-        self.save()  
+        self.save()
 
 class CoopAddressTags(models.Model):
     # Retain referencing coop & address, but set "is_public" relation to NULL

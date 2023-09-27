@@ -17,4 +17,3 @@ RUN python -m pip install -r requirements.txt
 RUN dos2unix /my-app/entrypoint.sh
 
 ENTRYPOINT ["bash", "/my-app/entrypoint.sh"]
-
