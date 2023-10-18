@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'password', 'email', 'id', 'first_name', 'last_name')
-    
+
     def validate(self, data):
         errors = {}
 
@@ -144,7 +144,7 @@ class ContactMethodPhoneSerializer(serializers.ModelSerializer):
 
 class ContactMethodEmailSerializer(serializers.ModelSerializer):
     #coops = CoopSerializer(many=True)
-    
+
     class Meta:
         model = ContactMethod
         fields = ['type', 'email', 'coops', 'email_is_public']
@@ -368,14 +368,23 @@ class CoopSerializer(serializers.ModelSerializer):
         addresses = validated_data.pop('coopaddresstags_set', {})
         phone = validated_data.pop('phone', {})
         email = validated_data.pop('email', {})
+        rec_updated_by = validated_data.pop('rec_updated_by',[])
+
         if not instance:
             instance = super().create(validated_data)
         for item in coop_types:
             coop_type, _ = CoopType.objects.get_or_create(name=item['name'])
             instance.types.add(coop_type)
-        instance.phone = ContactMethod.objects.create(type=ContactMethod.ContactTypes.PHONE, **phone)
-        instance.email = ContactMethod.objects.create(type=ContactMethod.ContactTypes.EMAIL, **email)
-        
+        for item in phone:
+            contact_method, _ = ContactMethod.objects.get_or_create(type=ContactMethod.ContactTypes.PHONE, phone=item['phone'])#should normalize the number here
+            instance.phone.add(contact_method)
+        for item in email:
+            contact_method, _ = ContactMethod.objects.get_or_create(type=ContactMethod.ContactTypes.EMAIL, email=item['email'])
+            instance.email.add(contact_method)
+        for item in rec_updated_by:
+            user, _ = User.objects.get(id=item.id)
+            instance.rec_updated_by.add(user)
+
         instance.name = validated_data.pop('name', None)
         instance.web_site = validated_data.pop('web_site', None)
         instance.approved = validated_data.pop('approved', None)
@@ -530,7 +539,7 @@ class CoopSpreadsheetSerializer(serializers.ModelSerializer):
             instance.types.add(coop_type)
         instance.phone = ContactMethod.objects.create(type=ContactMethod.ContactTypes.PHONE, **phone)
         instance.email = ContactMethod.objects.create(type=ContactMethod.ContactTypes.EMAIL, **email)
-        
+
         instance.name = validated_data.pop('name', None)
         instance.web_site = validated_data.pop('web_site', None)
         instance.save()

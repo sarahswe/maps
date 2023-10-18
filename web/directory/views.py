@@ -42,21 +42,21 @@ def signin(request):
 
     user = authenticate(
             username = signin_serializer.data['username'],
-            password = signin_serializer.data['password'] 
+            password = signin_serializer.data['password']
         )
-    
+
     if not user:
         return Response({'detail': 'Invalid Credentials or activate account'}, status=HTTP_404_NOT_FOUND)
-        
+
     #TOKEN STUFF
     token, _ = Token.objects.get_or_create(user = user)
-    
+
     #token_expire_handler will check, if the token is expired it will generate new one
     is_expired, token = token_expire_handler(token)     # The implementation will be described further
     user_serialized = UserSerializer(user)
 
     return Response({
-        'user': user_serialized.data, 
+        'user': user_serialized.data,
         'expires_in': expires_in(token),
         'token': token.key
     }, status=HTTP_200_OK)
@@ -66,7 +66,7 @@ def signin(request):
 def signout(request):
     user = request.user
     print("user: %s" % user)
-    Token.objects.filter(user=user).delete() 
+    Token.objects.filter(user=user).delete()
     # Remove header
     return Response({}, status=HTTP_200_OK)
 
